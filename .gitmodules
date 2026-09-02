@@ -1,0 +1,6 @@
+[submodule "cpp-stuff"]
+	path = cpp-stuff
+	url = git@github.com:dsonyy/cpp-stuff.git
+[submodule "python-stuff"]
+	path = python-stuff
+	url = git@github.com:dsonyy/python-stuff.git
