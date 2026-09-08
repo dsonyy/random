@@ -353,17 +353,25 @@ def resolve_paths(input_path: str) -> tuple[str, str, str]:
 
 
 def read_funds_from_markdown(markdown_path: str) -> list[Fund]:
-    """The region file is a markdown table: fund name in column 1, website in column 4."""
+    """The region file is a markdown table: fund name in column 1, website in column 4.
+
+    Judge rows by their cells, not by the shape of the line - some of these tables are
+    space-padded by the editor, which hides the header and separator from a naive match.
+    """
     funds: list[Fund] = []
     for line in open(markdown_path, encoding="utf8"):
         line = line.strip()
-        if (not line.startswith("|")
-                or set(line) <= set("|-")
-                or "| HQ city |" in line):
+        if not line.startswith("|"):
             continue
         cells = [cell.strip() for cell in line.split("|")[1:-1]]
-        if len(cells) > 3 and cells[3] and cells[3] != "?":
-            funds.append({"fund": cells[0], "site": cells[3]})
+        if len(cells) <= 3:
+            continue
+        name, site = cells[0], cells[3]
+        is_header = name.lower() == "fund" or site.lower() == "website"
+        is_separator = not name or set(name) <= set("-: ")
+        if is_header or is_separator or not site or site == "?":
+            continue
+        funds.append({"fund": name, "site": site})
     return funds
 
 
