@@ -42,6 +42,10 @@ BASE_MODEL: str = os.environ.get("MODEL") or (
     "qwen/qwen3.7-flash" if OPENROUTER_KEY else "qwen3.5:9b-q4_K_M")
 CONTEXT_TOKENS: int = int(os.environ.get("NUM_CTX", "12288"))
 COMPANIES_PER_REQUEST: int = int(os.environ.get("BATCH", "20"))
+# Crawling is free, so these caps only bound time. They were 45/120, which silently
+# truncated large funds: General Catalyst lists 800+ companies and yielded 119.
+PAGE_BUDGET: int = int(os.environ.get("PAGE_BUDGET", "1000"))
+COMPANY_PAGE_LIMIT: int = int(os.environ.get("COMPANY_PAGE_LIMIT", "1200"))
 # The context window holds prompt AND answer. Overflow makes the server truncate the
 # prompt, and the model then answers about companies it can no longer see. Pack batches
 # by size, not by count: 20 pages can be 30k characters or 43k depending on the sites.
@@ -236,7 +240,7 @@ def fetch_homepage(site: str) -> tuple[str, str]:
 
 
 def collect_portfolio_pages(site_url: str, site_domain: str, homepage_html: str,
-                            page_budget: int = 45) -> dict[str, str]:
+                            page_budget: int = PAGE_BUDGET) -> dict[str, str]:
     """Walk the fund site up to two levels deep, keeping pages that look like a portfolio."""
     pages: dict[str, str] = {site_url: homepage_html}
     visited: set[str] = set()
@@ -309,7 +313,8 @@ def crawl_fund_portfolio(fund_name: str, site: str) -> CrawlRecord:
     pages = collect_portfolio_pages(site_url, site_domain, homepage_html)
     companies_by_domain, per_company_page_urls = extract_company_candidates(pages, site_domain)
 
-    unvisited_company_pages = [url for url in per_company_page_urls if url not in pages][:120]
+    unvisited_company_pages = [
+        url for url in per_company_page_urls if url not in pages][:COMPANY_PAGE_LIMIT]
 
     def harvest_company_page(url: str) -> None:
         """A per-company page holds the real name in its heading and the site in its links."""
