@@ -801,7 +801,9 @@ def canonicalize_tags_and_stage(row: DescribedCompany) -> DescribedCompany:
     Separators vary by whim of the model - "fintech, ai-ml" and "fintech ai-ml" both
     show up - so split on whitespace too, after folding the multi-word synonyms.
     """
-    raw = str(row.get("tags", "")).lower()
+    value = row.get("tags", "")
+    # The model answers "a, b" most of the time and ["a", "b"] the rest of the time.
+    raw = (", ".join(str(item) for item in value) if isinstance(value, list) else str(value)).lower()
     for phrase, canonical in TAG_SYNONYMS.items():
         if " " in phrase:
             raw = raw.replace(phrase, canonical)
@@ -926,6 +928,8 @@ def self_check() -> None:
     assert canonicalize_tags_and_stage({"tags": "robotics ai-ml"})["tags"] == "robotics,ai-ml"
     assert canonicalize_tags_and_stage({"tags": "cyber security"})["tags"] == "cybersecurity"
     assert canonicalize_tags_and_stage({"tags": "crypto fintech payments"})["tags"] == "crypto,fintech"
+    assert canonicalize_tags_and_stage({"tags": ["ai-ml", "computer-vision"]})["tags"] == "ai-ml,computer-vision"
+    assert canonicalize_tags_and_stage({"tags": ["gaming"]})["tags"] == "gaming"
     assert canonicalize_tags_and_stage({"tags": "made-up-tag", "stage": ""})["stage"] == "unknown"
 
     big: CompanyPage = {"domain": "big.com", "ok": True, "text": "x" * 12000}
