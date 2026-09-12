@@ -1,0 +1,41 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _b8cf4d35-20260127 OPENFOAM=2412 patch=260127 version=2412
+Arch   : "LSB;label=32;scalar=64"
+Exec   : mapFields ../cavityFine -consistent
+Date   : Sep 12 2026
+Time   : 10:22:13
+Host   : asus-linux
+PID    : 292467
+I/O    : uncollated
+Case   : /home/dsonyy/repos/random/cfd/cavityGrade
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Source: "/home/dsonyy/repos/random/cfd" "cavityFine"
+Target: "/home/dsonyy/repos/random/cfd" "cavityGrade"
+
+Create databases as time
+
+Source time: 0.7
+Target time: 0.7
+Create meshes
+
+Source mesh size: 1600	Target mesh size: 400
+
+
+Consistently creating and mapping fields for time 0.7
+
+    interpolating p
+    interpolating U
+
+End
+
