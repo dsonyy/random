@@ -1,0 +1,27 @@
+[project]
+name = "blob-rects"
+version = "0.1.0"
+description = "Fit rotated rectangles to blobs in a binary mask"
+authors = [
+    { name = "Szymon Bednorz", email = "dsonyyy@gmail.com" }
+]
+requires-python = "==3.13.*"
+dependencies = [
+    "numpy==2.5.2",
+    "opencv-python-headless==5.0.0.93",
+    "scipy==1.18.1",
+    "shapely==2.1.2",
+    "pillow==12.3.0",
+]
+
+[project.scripts]
+blob-rects = "blob_rects:main"
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
