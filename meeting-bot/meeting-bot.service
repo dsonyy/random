@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram bot transcribing recordings into brain/projects/meetings
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=%h/repos/random/meeting-bot
+EnvironmentFile=%h/services/garmin-agent/.env
+ExecStart=%h/repos/random/meeting-bot/.venv/bin/python bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
