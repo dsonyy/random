@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=%h/repos/random/meeting-bot
-EnvironmentFile=%h/services/garmin-agent/.env
+EnvironmentFile=%h/repos/dotfiles/.env
 ExecStart=%h/repos/random/meeting-bot/.venv/bin/python bot.py
 Restart=always
 RestartSec=10
