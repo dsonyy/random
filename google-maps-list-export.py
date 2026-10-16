@@ -1,11 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run -q --script
+# /// script
+# dependencies = ["rookie-cookies"]
+# ///
 import csv
 import datetime
 import json
-import os
 import re
 import sys
 import urllib.request
+
+import rookie_cookies
 
 COLUMNS = [
     "list_title", "list_description", "list_owner", "name", "note", "address", "lat", "lng",
@@ -18,14 +22,11 @@ Usage: google-maps-list-export.py <list-url> > places.csv
 
 <list-url> is a share link (maps.app.goo.gl/...) or the address bar URL of an
 open list (google.com/maps/placelists/list/...), including Starred places.
-Private lists need GOOGLE_COOKIE.
+Private lists and Starred places use the Google session from your browser.
 
 Columns: {", ".join(COLUMNS)}"""
 
-COOKIE_HELP = """This list is private or does not exist. To read a private list, set GOOGLE_COOKIE:
-1. Open https://www.google.com/maps signed in, then DevTools -> Application -> Cookies -> https://www.google.com.
-2. Copy the values of __Secure-3PSID and __Secure-3PSIDTS.
-3. export GOOGLE_COOKIE='__Secure-3PSID=<value>; __Secure-3PSIDTS=<value>'"""
+COOKIE_HELP = "Sign in at https://www.google.com/maps in your browser and rerun."
 
 UINT64 = 1 << 64
 BROWSER_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
@@ -79,9 +80,10 @@ def fetch_starred(cookie):
 
 
 def require_cookie():
-    cookie = os.environ.get("GOOGLE_COOKIE")
+    cookies = rookie_cookies.load(["google.com"])
+    cookie = "; ".join(f"{c['name']}={c['value']}" for c in cookies if c["domain"] in (".google.com", "www.google.com"))
     if not cookie:
-        sys.exit(COOKIE_HELP)
+        sys.exit("No Google session in any browser. " + COOKIE_HELP)
     return cookie
 
 
@@ -133,7 +135,7 @@ def list_rows(url):
     if lst is None:
         lst = fetch_list(list_id, require_cookie())
         if lst is None:
-            sys.exit("List not found with GOOGLE_COOKIE either. The cookie may be expired or the list belongs to another account.")
+            sys.exit("List not found with the browser's Google session either. It may be expired or the list belongs to another account.")
     items = at(lst, 8) or []
     total = at(lst, 12) or len(items)
     print(f"{at(lst, 4)}: {len(items)}/{total} places", file=sys.stderr)
@@ -145,7 +147,7 @@ def list_rows(url):
 def starred_rows():
     places = fetch_starred(require_cookie())
     if not places:
-        sys.exit("No starred places returned. The cookie may be expired.")
+        sys.exit("No starred places returned. The Google session may be expired. " + COOKIE_HELP)
     print(f"Starred places: {len(places)} places", file=sys.stderr)
     if len(places) == 200:
         print("Warning: Google returns at most 200 starred places, the same as maps.google.com shows", file=sys.stderr)

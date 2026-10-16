@@ -1,23 +1,24 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run -q --script
+# /// script
+# dependencies = ["rookie-cookies"]
+# ///
 import csv
 import json
-import os
 import sys
 import urllib.request
 
+import rookie_cookies
+
 COLUMNS = ["kind", "title", "places", "url"]
 
-HELP = f"""List all Google Maps saved lists of the signed-in account as CSV to stdout.
+HELP = f"""List all Google Maps saved lists of the account signed in to your browser as CSV to stdout.
 
 Usage: google-maps-lists.py > lists.csv
 Feed each url to google-maps-list-export.py to export its places.
 
 Columns: {", ".join(COLUMNS)}"""
 
-COOKIE_HELP = """Set GOOGLE_COOKIE to your Google session:
-1. Open https://www.google.com/maps signed in, then DevTools -> Application -> Cookies -> https://www.google.com.
-2. Copy the values of __Secure-3PSID and __Secure-3PSIDTS.
-3. export GOOGLE_COOKIE='__Secure-3PSID=<value>; __Secure-3PSIDTS=<value>'"""
+COOKIE_HELP = "Sign in at https://www.google.com/maps in your browser and rerun."
 
 # Response index -> kind. The pb sections 23, 24 and 12+38 request own, followed and shared lists.
 SECTIONS = {29: "own", 30: "followed", 43: "shared"}
@@ -36,18 +37,23 @@ def at(node, *path):
     return node
 
 
+def google_cookie():
+    cookies = rookie_cookies.load(["google.com"])
+    return "; ".join(f"{c['name']}={c['value']}" for c in cookies if c["domain"] in (".google.com", "www.google.com"))
+
+
 def main():
     if len(sys.argv) != 1:
         sys.exit(HELP)
-    cookie = os.environ.get("GOOGLE_COOKIE")
+    cookie = google_cookie()
     if not cookie:
-        sys.exit(f"{HELP}\n\n{COOKIE_HELP}")
+        sys.exit("No Google session in any browser. " + COOKIE_HELP)
 
     headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36", "Cookie": cookie}
     with urllib.request.urlopen(urllib.request.Request(URL, headers=headers), timeout=30) as res:
         data = json.loads(res.read().decode("utf-8").split("\n", 1)[1])
     if not any(at(data, i, 3) for i in SECTIONS):
-        sys.exit("No lists returned. GOOGLE_COOKIE may be expired.\n\n" + COOKIE_HELP)
+        sys.exit("No lists returned. The Google session may be expired. " + COOKIE_HELP)
 
     writer = csv.DictWriter(sys.stdout, fieldnames=COLUMNS)
     writer.writeheader()
