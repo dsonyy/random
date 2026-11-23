@@ -1,0 +1,5 @@
+spike/*/bin/
+*.sock
+kk
+web/node_modules/
+web/dist/
